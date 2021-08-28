@@ -19,13 +19,13 @@ class User:
         query = "SELECT * FROM users WHERE username=?"
         result = cursor.execute(query, (username,))
         row = result.fetchone() # get the first value from the filtered table
-        user = cls(*row) if row else None
         connection.close()
+        user = cls(*row) if row else None
         return user
     
     @classmethod
     def findById(cls, _id):
-        connection = sqlite3.connect("data.db")
+        connection = sqlite3.connect("development_database.db")
         cursor = connection.cursor()
         query = "SELECT * FROM users WHERE id=?"
         result = cursor.execute(query, (_id,))
@@ -60,12 +60,10 @@ class UserSignUp(Resource):
         data = UserSignUp.parser.parse_args()
         if(User.findByUsername(data["username"])):
             return {"message": "A user with the given username has already exist.", "status": 400}, 400
-        
-        id = str(uuid4())
         connection = sqlite3.connect("development_database.db")
         cursor = connection.cursor()
         query = "INSERT INTO users VALUES(?, ?, ?, ?, ?)"
-        cursor.execute(query, (id, data["username"], data["password"], data["firstName"], data["lastName"]))
+        cursor.execute(query, (str(uuid4()), data["username"], data["password"], data["firstName"], data["lastName"]))
         connection.commit()
         connection.close()
         return {

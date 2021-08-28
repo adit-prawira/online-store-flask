@@ -2,7 +2,8 @@
 import sqlite3
 from flask_restful import Resource, reqparse
 from uuid import uuid4
-class User:
+from flask_jwt import jwt_required
+class UserModel:
     def __init__(self, _id, username, password, firstName, lastName):
         self.id = _id
         self.username = username
@@ -34,6 +35,16 @@ class User:
         connection.close()
         return user
 
+    @classmethod
+    def getAll(cls):
+        connection = sqlite3.connect("development_database.db")
+        cursor = connection.cursor()
+        query = "SELECT * FROM users"
+        result = cursor.execute(query)
+        keys = [header[0] for header in result.description]
+        users = [dict(zip(keys, values)) for values in result.fetchall()]
+        connection.close()
+        return users
 
 class UserSignUp(Resource):
     parser = reqparse.RequestParser()
@@ -58,7 +69,7 @@ class UserSignUp(Resource):
     )
     def post(self):
         data = UserSignUp.parser.parse_args()
-        if(User.findByUsername(data["username"])):
+        if(UserModel.findByUsername(data["username"])):
             return {"message": "A user with the given username has already exist.", "status": 400}, 400
         connection = sqlite3.connect("development_database.db")
         cursor = connection.cursor()
@@ -70,3 +81,8 @@ class UserSignUp(Resource):
             "message": "User has been successfully create",
             "status": 201
         }, 201
+
+class GetAllUsers(Resource):
+    @jwt_required()
+    def get(self):
+        return {"users":UserModel.getAll()}

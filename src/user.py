@@ -70,7 +70,10 @@ class UserSignUp(Resource):
     def post(self):
         data = UserSignUp.parser.parse_args()
         if(UserModel.findByUsername(data["username"])):
-            return {"message": "A user with the given username has already exist.", "status": 400}, 400
+            return {
+                "message": "A user with the given username has already exist.", 
+                "status": 400
+            }, 400
         connection = sqlite3.connect("development_database.db")
         cursor = connection.cursor()
         query = "INSERT INTO users VALUES(?, ?, ?, ?, ?)"

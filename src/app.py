@@ -16,4 +16,6 @@ api.add_resource(CreateItem, "/item")
 api.add_resource(ItemList, "/items")
 api.add_resource(UserSignUp, "/user/signup")
 api.add_resource(GetAllUsers, "/users")
-app.run(port=5000, debug=True)
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)

@@ -19,7 +19,7 @@ parser.add_argument("price",
         
 # Get and update details of an item in the database by passing its id
 class Item(Resource):
-    # @jwt_required()
+    @jwt_required()
     def get(self, id):
         item = ItemModel.findById(id)
         if(item):
@@ -27,7 +27,7 @@ class Item(Resource):
         return Res(item, "Item not found in store", 404).__dict__, 404
         
         
-    # @jwt_required()
+    @jwt_required()
     def put(self, id):
         try:
             item = ItemModel.findById(id)
@@ -41,7 +41,7 @@ class Item(Resource):
         except:
             return Res(None, "An error has occur during update", 500).__dict__, 500
 
-    # @jwt_required()
+    @jwt_required()
     def delete(self, id):
         try:
             item = ItemModel.findById(id)
@@ -54,7 +54,7 @@ class Item(Resource):
 
 # Create an item to the store   
 class CreateItem(Resource):
-    # @jwt_required()
+    @jwt_required()
     def post(self):
         try:
             global parser
@@ -66,6 +66,6 @@ class CreateItem(Resource):
 
 #Get all item list in the database
 class ItemList(Resource):
-    # @jwt_required()
+    @jwt_required()
     def get(self):
         return Res(ItemModel.getAllItems(), "ALl existing items in store", 200).__dict__, 200

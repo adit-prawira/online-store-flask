@@ -24,8 +24,7 @@ class UserModel:
         result = cursor.execute(query, (username,))
         row = result.fetchone() # get the first value from the filtered table
         connection.close()
-        user = cls(*row).__dict__ if row else None
-        cls.__removePassword(user)
+        user = cls(*row) if row else None
         return user
     
     @classmethod
@@ -36,9 +35,7 @@ class UserModel:
         result = cursor.execute(query, (_id,))
         row = result.fetchone()
         connection.close()
-        user = cls(*row).__dict__ if row else None
-        print(user)
-        cls.__removePassword(user)
+        user = cls(*row) if row else None
         return user
 
     @classmethod
@@ -63,3 +60,5 @@ class UserModel:
         connection.close()
         cls.__removePassword(data)
         return data
+
+        

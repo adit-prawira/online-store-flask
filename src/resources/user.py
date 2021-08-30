@@ -33,19 +33,11 @@ class UserSignUp(Resource):
         newUser = UserModel.insertUser(data)
         return Res(newUser, "User has been successfully create", 201).__dict__, 201
 class GetAllUsers(Resource):
-    # @jwt_required()
+    @jwt_required()
     def get(self):
         try:
             return Res(UserModel.getAllUsers(), "All existing users in the server", 200).__dict__, 200;
         except:
             return Res(None, "Cannot retrieve users", 500).__dict__, 500
 
-class GetUser(Resource):
-    def get(self, id):
-        user = UserModel.findById(id)
-        if(user):
-            try:
-                return Res(user, "Currently logged in user", 200).__dict__, 200
-            except:
-                return Res(None, "Cannot fetch currently logged in user", 500).__dict__, 500
-        return Res(None, "User not found", 404).__dict__, 404
+    

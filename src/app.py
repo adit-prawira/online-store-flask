@@ -2,8 +2,8 @@ from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
 from security import authenticate, identity
-from user import UserSignUp, GetAllUsers
-from item import Item, CreateItem, ItemList
+from resources.user import UserSignUp, GetAllUsers
+from resources.item import Item, CreateItem, ItemList
 
 app = Flask(__name__)
 app.secret_key = "adit2899!!280199"

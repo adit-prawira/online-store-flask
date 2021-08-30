@@ -3,6 +3,7 @@ from flask_restful import Resource, reqparse
 from flask_jwt import jwt_required
 from uuid import uuid4
 from response_body import ResponseBody as ResB
+from models.item import ItemModel
 
 parser = reqparse.RequestParser()
 parser.add_argument("name", 
@@ -15,38 +16,12 @@ parser.add_argument("price",
     required=True,
     help="Price of the following item must be provided."
 )
-
-class Items:
-    def __init__(self, _id, name, price):
-        self.id = _id
-        self.name = name
-        self.price = price
-    
-    @classmethod
-    def findById(cls, _id):
-        connection = sqlite3.connect("development_database.db")
-        cursor = connection.cursor()
-        query = "SELECT * FROM items WHERE id=?"
-        result = cursor.execute(query, (_id,))
-        row = result.fetchone()
-        connection.close()
-        item = cls(*row) if row else None
-        return item
-
-    @classmethod
-    def deleteById(cls, _id):
-        connection = sqlite3.connect("development_database.db")
-        cursor = connection.cursor()
-        query = "DELETE FROM items WHERE id=?"
-        cursor.execute(query, (_id,))
-        connection.commit()
-        connection.close()
         
 # Get and update details of an item in the database by passing its id
 class Item(Resource):
     @jwt_required()
     def get(self, id):
-        item = Items.findById(id)
+        item = ItemModel.findById(id)
         if(item):
             return ResB(item.__dict__, "Item found in store", 200).__dict__, 200
         return ResB(item, "Item not found in store", 404).__dict__, 404
@@ -65,20 +40,20 @@ class Item(Resource):
     @jwt_required()
     def put(self, id):
         try:
-            item = Items.findById(id)
+            item = ItemModel.findById(id)
             if(not item):
                 return ResB(item, "Item not found", 404), 404
             self.updateItem(id)
-            return ResB(Items.findById(id).__dict__, "Item successfully updated", 204).__dict__, 204
+            return ResB(ItemModel.findById(id).__dict__, "Item successfully updated", 204).__dict__, 204
         except:
             return ResB(None, "An error has occur during update", 500).__dict__, 500
 
     @jwt_required()
     def delete(self, id):
         try:
-            item = Items.findById(id)
+            item = ItemModel.findById(id)
             if(item):
-                Items.deleteById(id)
+                ItemModel.deleteById(id)
                 return ResB(None, "Item successfully deleted", 204).__dict__, 204
             return ResB(None, "Item not found", 404).__dict__, 404
         except:

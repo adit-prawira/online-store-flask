@@ -4,7 +4,7 @@ from flask_restful import Resource, reqparse
 from uuid import uuid4
 from flask_jwt import jwt_required
 from models.user import UserModel
-
+from response_body import ResponseBody as Res
 class UserSignUp(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument("username", 
@@ -29,22 +29,23 @@ class UserSignUp(Resource):
     def post(self):
         data = UserSignUp.parser.parse_args()
         if(UserModel.findByUsername(data["username"])):
-            return {
-                "message": "A user with the given username has already exist.", 
-                "status": 400
-            }, 400
-        connection = sqlite3.connect("development_database.db")
-        cursor = connection.cursor()
-        query = "INSERT INTO users VALUES(?, ?, ?, ?, ?)"
-        cursor.execute(query, (str(uuid4()), data["username"], data["password"], data["firstName"], data["lastName"]))
-        connection.commit()
-        connection.close()
-        return {
-            "message": "User has been successfully create",
-            "status": 201
-        }, 201
-
+            return Res(None, "A user with the given username has already exist", 400).__dict__, 400
+        newUser = UserModel.insertUser(data)
+        return Res(newUser, "User has been successfully create", 201).__dict__, 201
 class GetAllUsers(Resource):
-    @jwt_required()
+    # @jwt_required()
     def get(self):
-        return {"users":UserModel.getAll()}
+        try:
+            return Res(UserModel.getAllUsers(), "All existing users in the server", 200).__dict__, 200;
+        except:
+            return Res(None, "Cannot retrieve users", 500).__dict__, 500
+
+class GetUser(Resource):
+    def get(self, id):
+        user = UserModel.findById(id)
+        if(user):
+            try:
+                return Res(user, "Currently logged in user", 200).__dict__, 200
+            except:
+                return Res(None, "Cannot fetch currently logged in user", 500).__dict__, 500
+        return Res(None, "User not found", 404).__dict__, 404

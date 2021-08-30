@@ -2,7 +2,7 @@ from flask import Flask
 from flask_restful import Api
 from flask_jwt import JWT
 from security import authenticate, identity
-from resources.user import UserSignUp, GetAllUsers
+from resources.user import UserSignUp, GetAllUsers, GetUser
 from resources.item import Item, CreateItem, ItemList
 
 app = Flask(__name__)
@@ -16,6 +16,6 @@ api.add_resource(CreateItem, "/item")
 api.add_resource(ItemList, "/items")
 api.add_resource(UserSignUp, "/user/signup")
 api.add_resource(GetAllUsers, "/users")
-
+api.add_resource(GetUser, "/user/<string:id>")
 if __name__ == "__main__":
     app.run(port=5000, debug=True)

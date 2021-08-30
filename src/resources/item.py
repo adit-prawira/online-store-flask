@@ -23,7 +23,7 @@ class Item(Resource):
     def get(self, id):
         item = ItemModel.findById(id)
         if(item):
-            return Res(item.__dict__, "Item found in store", 200).__dict__, 200
+            return Res(item.toJSON(), "Item found in store", 200).__dict__, 200
         return Res(item, "Item not found in store", 404).__dict__, 404
         
         
@@ -31,13 +31,15 @@ class Item(Resource):
     def put(self, id):
         try:
             item = ItemModel.findById(id)
+            print(item)
             if(not item):
-                return Res(item, "Item not found", 404), 404
+                return Res(item, "Item not found", 404).__dict__, 404
             global parser
             data = parser.parse_args()
-            newItemData = {"name":data["name"], "price": data["price"], "id": id}
-            ItemModel.updateItem(newItemData)
-            return Res(ItemModel.findById(id).__dict__, "Item successfully updated", 204).__dict__, 204
+            item.name = data["name"]
+            item.price = data["price"]
+            item.saveToDB()
+            return Res(data, "Item successfully updated", 204).__dict__, 204
         except:
             return Res(None, "An error has occur during update", 500).__dict__, 500
 
@@ -45,8 +47,9 @@ class Item(Resource):
     def delete(self, id):
         try:
             item = ItemModel.findById(id)
+            print(item)
             if(item):
-                ItemModel.deleteById(id)
+                item.deleteFromDB()
                 return Res(None, "Item successfully deleted", 204).__dict__, 204
             return Res(None, "Item not found", 404).__dict__, 404
         except:
@@ -59,8 +62,10 @@ class CreateItem(Resource):
         try:
             global parser
             data = parser.parse_args()
-            item = ItemModel.insertItem(data)
-            return Res(item, "Item is successfully created", 201).__dict__, 201
+            data["id"] = str(uuid4())
+            item = ItemModel(data["id"], data["name"], data["price"]) # create new model
+            item.saveToDB()
+            return Res(data, "Item is successfully created", 201).__dict__, 201
         except:
             return Res(None, "An error has occur during creation", 500).__dict__, 500
 
@@ -68,4 +73,8 @@ class CreateItem(Resource):
 class ItemList(Resource):
     @jwt_required()
     def get(self):
-        return Res(ItemModel.getAllItems(), "ALl existing items in store", 200).__dict__, 200
+        try:
+            print()
+            return Res(ItemModel.getAllItems(), "All existing items in store", 200).__dict__, 200
+        except:
+            return Res(None, "Error during fetching all items", 500).__dict__, 500

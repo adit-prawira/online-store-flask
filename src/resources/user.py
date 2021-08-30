@@ -26,12 +26,19 @@ class UserSignUp(Resource):
         type=str,
         required=False,
     )
-    def post(self):
-        data = UserSignUp.parser.parse_args()
+    
+    @classmethod
+    def post(cls):
+        data = cls.parser.parse_args()
         if(UserModel.findByUsername(data["username"])):
             return Res(None, "A user with the given username has already exist", 400).__dict__, 400
-        newUser = UserModel.insertUser(data)
-        return Res(newUser, "User has been successfully create", 201).__dict__, 201
+        data["id"] = str(uuid4())
+        newUser = UserModel(data["id"], data["username"], 
+                            data["username"], data["firstName"],
+                            data["lastName"])
+        newUser.saveToDB()
+        data.pop("password")
+        return Res(data, "User has been successfully create", 201).__dict__, 201
 class GetAllUsers(Resource):
     @jwt_required()
     def get(self):
@@ -40,4 +47,8 @@ class GetAllUsers(Resource):
         except:
             return Res(None, "Cannot retrieve users", 500).__dict__, 500
 
-    
+class GetUser(Resource):
+    @jwt_required()
+    def get(self, username):
+        user = UserModel.findByUsername(username)
+        return Res(user.toJSON(), "Currently logged in user", 200).__dict__, 200

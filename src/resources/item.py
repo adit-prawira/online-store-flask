@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from flask_jwt import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from response_body import ResponseBody as Res
 from models.item import ItemModel
 
@@ -29,12 +29,10 @@ class Item(Resource):
             return Res(item.toJSON(), "Item found in store", 200).__dict__, 200
         return Res(item, "Item not found in store", 404).__dict__, 404
         
-        
     @jwt_required()
     def put(self, id):
         try:
             item = ItemModel.findById(id)
-            print(item)
             if(not item):
                 return Res(item, "Item not found", 404).__dict__, 404
             global parser
@@ -48,9 +46,11 @@ class Item(Resource):
 
     @jwt_required()
     def delete(self, id):
+        claims = get_jwt()
+        if(claims["is_admin"]):
+            return Res(None, "Admin privilege required", 401).__dict__, 401
         try:
             item = ItemModel.findById(id)
-            print(item)
             if(item):
                 item.deleteFromDB()
                 return Res(None, "Item successfully deleted", 204).__dict__, 204
@@ -77,5 +77,6 @@ class ItemList(Resource):
     def get(self):
         try:
             return Res(ItemModel.getAllItems(), "All existing items in store", 200).__dict__, 200
+            #return Res(ItemModel.getAllItemsNotComplete(), "All existing items in the store. Sign in for more information", 200).__dict__, 200
         except:
             return Res(None, "Error during fetching all items", 500).__dict__, 500

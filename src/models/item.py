@@ -22,7 +22,10 @@ class ItemModel(db.Model):
     @classmethod
     def getAllItems(cls):
         return list(map(lambda item: item.toJSON(), cls.query.all()))
-    
+
+    @classmethod
+    def getAllItemsNotComplete(cls):
+        return list(map(lambda item: item.toJSON()["name"], cls.query.all()))
     def toJSON(self):
         return {"id":self.id, "name":self.name, "price":self.price, "storeId":self.storeId}
     

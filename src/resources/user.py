@@ -1,9 +1,11 @@
 
 from flask_restful import Resource, reqparse
 from uuid import uuid4
-from flask_jwt import jwt_required
 from models.user import UserModel
 from response_body import ResponseBody as Res
+from werkzeug.security import safe_str_cmp
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt
+
 class UserSignUp(Resource):
     parser = reqparse.RequestParser()
     parser.add_argument("username", 
@@ -49,7 +51,35 @@ class GetAllUsers(Resource):
 class GetUser(Resource):
     @jwt_required()
     def get(self, username):
+        
         user = UserModel.findByUsername(username)
         if(user):
             return Res(user.toJSON(), "Currently logged in user", 200).__dict__, 200
         return Res(None, "User not found", 404).__dict__, 404
+    
+class UserSignIn(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument("username", 
+        type=str,
+        required=True,
+        help="A username must be provided."
+    )
+    parser.add_argument("password", 
+        type=str,
+        required=True,
+        help="A password must be provided."
+    )
+    @classmethod
+    def post(cls):
+        data = cls.parser.parse_args()
+        
+        # find user in the database and check if the given password is valid
+        user = UserModel.findByUsername(data["username"])
+        if(user and safe_str_cmp(user.password, data["password"])):
+            access_token = create_access_token(identity=user.id, fresh=True) # create access token
+            refresh_token = create_refresh_token(user.id) # create refresh token
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token
+            }, 200
+        return Res(None, "Invalid credentials", 401).__dict__, 401

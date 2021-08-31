@@ -1,5 +1,4 @@
 
-import sqlite3
 from flask_restful import Resource, reqparse
 from uuid import uuid4
 from flask_jwt import jwt_required
@@ -34,7 +33,7 @@ class UserSignUp(Resource):
             return Res(None, "A user with the given username has already exist", 400).__dict__, 400
         data["id"] = str(uuid4())
         newUser = UserModel(data["id"], data["username"], 
-                            data["username"], data["firstName"],
+                            data["password"], data["firstName"],
                             data["lastName"])
         newUser.saveToDB()
         data.pop("password")
@@ -51,4 +50,6 @@ class GetUser(Resource):
     @jwt_required()
     def get(self, username):
         user = UserModel.findByUsername(username)
-        return Res(user.toJSON(), "Currently logged in user", 200).__dict__, 200
+        if(user):
+            return Res(user.toJSON(), "Currently logged in user", 200).__dict__, 200
+        return Res(None, "User not found", 404).__dict__, 404

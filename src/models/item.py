@@ -6,11 +6,14 @@ class ItemModel(db.Model):
     id = db.Column(db.String, primary_key=True)
     name = db.Column(db.String(80))
     price = db.Column(db.Float(precision=2))
+    storeId = db.Column(db.String, db.ForeignKey("stores.id"))
+    store = db.relationship("StoreModel")
     
-    def __init__(self, _id:str, name:str, price:float):
-        self.id = _id
+    def __init__(self, name:str, price:float, storeId: str):
+        self.id = str(uuid4())
         self.name = name
         self.price = price
+        self.storeId = storeId
         
     @classmethod
     def findById(cls, _id:str):
@@ -20,9 +23,8 @@ class ItemModel(db.Model):
     def getAllItems(cls):
         return list(map(lambda item: item.toJSON(), cls.query.all()))
     
-    
     def toJSON(self):
-        return {"id":self.id, "name":self.name, "price":self.price}
+        return {"id":self.id, "name":self.name, "price":self.price, "storeId":self.storeId}
     
     def deleteFromDB(self):
         db.session.delete(self)

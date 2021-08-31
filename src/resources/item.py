@@ -1,7 +1,5 @@
-import sqlite3
 from flask_restful import Resource, reqparse
 from flask_jwt import jwt_required
-from uuid import uuid4
 from response_body import ResponseBody as Res
 from models.item import ItemModel
 
@@ -15,6 +13,11 @@ parser.add_argument("price",
     type=float,
     required=True,
     help="Price of the following item must be provided."
+)
+parser.add_argument("storeId", 
+    type=str,
+    required=True,
+    help="A store ID must be provided."
 )
         
 # Get and update details of an item in the database by passing its id
@@ -62,10 +65,9 @@ class CreateItem(Resource):
         try:
             global parser
             data = parser.parse_args()
-            data["id"] = str(uuid4())
-            item = ItemModel(data["id"], data["name"], data["price"]) # create new model
+            item = ItemModel(data["name"], data["price"], data["storeId"]) # create new model
             item.saveToDB()
-            return Res(data, "Item is successfully created", 201).__dict__, 201
+            return Res(item.toJSON(), "Item is successfully created", 201).__dict__, 201
         except:
             return Res(None, "An error has occur during creation", 500).__dict__, 500
 
@@ -74,7 +76,6 @@ class ItemList(Resource):
     @jwt_required()
     def get(self):
         try:
-            print()
             return Res(ItemModel.getAllItems(), "All existing items in store", 200).__dict__, 200
         except:
             return Res(None, "Error during fetching all items", 500).__dict__, 500

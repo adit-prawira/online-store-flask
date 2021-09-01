@@ -2,18 +2,24 @@ import os
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_jwt_extended import JWTManager
-from resources.user import UserSignUp, GetAllUsers, GetUser, UserSignIn, TokenRefresh
+from resources.user import (UserSignUp, GetAllUsers, 
+                            GetUser, UserSignIn, 
+                            TokenRefresh, UserSignOut)
 from resources.item import Item, CreateItem, ItemList
 from resources.store import AccessStore, CreateStore, StoreList
 from models.store import StoreModel
 from models.user import UserModel
 from database import db
 from response_body import ResponseBody as Res
+from blacklist import BLACK_LIST
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("POSTGRESQL_URL", "sqlite:///development_database.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["PROPAGATE_EXCEPTIONS"] = True
+app.config["JWT_BLACKLIST_ENABLED"] = True
+app.config["JWT_BLACKLIST_TOKEN_CHECKS"] = ["access", "refresh"]
 app.secret_key = "adit2899!!280199"
+
 api = Api(app)
 jwt = JWTManager(app) 
 
@@ -24,8 +30,12 @@ def add_claims_to_jwt(identity):
         return {"is_admin": True}
     return {"is_admin": False}
 
+@jwt.token_in_blocklist_loader
+def check_if_token_in_blacklist(jwt_headers, jwt_payload):
+    return jwt_payload["jti"] in BLACK_LIST
+
 @jwt.expired_token_loader
-def expired_token_callback():
+def expired_token_callback(jwt_headers, jwt_payload):
     return jsonify(Res(None, "Token has expired", 401).__dict__), 401
     
 @jwt.invalid_token_loader
@@ -37,11 +47,11 @@ def missing_token_callback(err):
     return jsonify(Res(None, "Request does not contain an access token", 401).__dict__), 401
 
 @jwt.needs_fresh_token_loader
-def token_not_fresh_callbakc(err):
+def token_not_fresh_callback(jwt_headers, jwt_payload):
     return jsonify(Res(None, "The token is not fresh", 401).__dict__), 401
 
 @jwt.revoked_token_loader
-def revoked_token_callback(err):
+def revoked_token_callback(jwt_headers, jwt_payload):
     return jsonify(Res(None, "The token has been revoked", 401).__dict__), 401
 #########################################################################################
 
@@ -53,6 +63,7 @@ api.add_resource(GetUser, "/user/<string:username>")
 api.add_resource(GetAllUsers, "/users")
 api.add_resource(UserSignUp, "/user/signup")
 api.add_resource(UserSignIn, "/user/signin")
+api.add_resource(UserSignOut, "/user/signout")
 
 api.add_resource(AccessStore, "/store/<string:id>")
 api.add_resource(CreateStore, "/store")

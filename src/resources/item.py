@@ -60,7 +60,7 @@ class Item(Resource):
 
 # Create an item to the store   
 class CreateItem(Resource):
-    @jwt_required()
+    @jwt_required(fresh=True)
     def post(self):
         try:
             global parser
@@ -80,3 +80,6 @@ class ItemList(Resource):
             #return Res(ItemModel.getAllItemsNotComplete(), "All existing items in the store. Sign in for more information", 200).__dict__, 200
         except:
             return Res(None, "Error during fetching all items", 500).__dict__, 500
+
+
+    

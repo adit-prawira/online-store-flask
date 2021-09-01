@@ -4,7 +4,10 @@ from uuid import uuid4
 from models.user import UserModel
 from response_body import ResponseBody as Res
 from werkzeug.security import safe_str_cmp
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt
+from flask_jwt_extended import (create_access_token, 
+                                create_refresh_token, 
+                                jwt_required, get_jwt, 
+                                get_jwt_identity)
 
 class UserSignUp(Resource):
     parser = reqparse.RequestParser()
@@ -83,3 +86,12 @@ class UserSignIn(Resource):
                 "refresh_token": refresh_token
             }, 200
         return Res(None, "Invalid credentials", 401).__dict__, 401
+
+class TokenRefresh(Resource):
+    @jwt_required(refresh=True)
+    def post(self):
+        currentUser = get_jwt_identity()
+        newToken = create_access_token(identity=currentUser, fresh=False)
+        return {
+            "access_token": newToken
+        }, 200
